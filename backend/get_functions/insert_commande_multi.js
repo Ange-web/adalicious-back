@@ -23,9 +23,6 @@ const insertCommandeMulti = async (req, res) => {
         await client.query('BEGIN');
 
         // 3. Insérer la commande (entête)
-        // Note: on met un menu_id NULL ou générique si la colonne est encore requise, ou on l'ignore si rendue nullable.
-        // Supposons qu'on peut laisser NULL ou qu'on met le premier item pour compatibilité (optionnel).
-        // Ici on met NULL pour menu_id car c'est une commande multi-items
         const commandeRes = await client.query(
             `INSERT INTO "adalicious"."commandes" (prenom, statut, archivee, annulee, served_at)
        VALUES ($1, $2, $3, $4, NULL)
@@ -41,9 +38,10 @@ const insertCommandeMulti = async (req, res) => {
         // 4. Insérer les items
         const insertedItems = [];
         for (const item of items) {
+            // CORRECTION: Utilisation de la colonne 'price' de la table Menu pour insérer dans 'prix' de commande_items
             const itemRes = await client.query(
                 `INSERT INTO "adalicious"."commande_items" (commande_id, menu_id, quantite, prix)
-         VALUES ($1, $2, $3, (SELECT prix FROM "adalicious"."Menu" WHERE id = $2))
+         VALUES ($1, $2, $3, (SELECT price FROM "adalicious"."Menu" WHERE id = $2))
          RETURNING *`,
                 [commandeId, item.menu_id, item.quantite]
             );
@@ -56,6 +54,7 @@ const insertCommandeMulti = async (req, res) => {
 
         res.status(201).json({
             message: 'Commande enregistrée avec succès',
+            commandeId: commande.id, // Retour explicite de l'ID demandé
             commande: commande,
             items: insertedItems
         });

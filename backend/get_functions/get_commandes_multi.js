@@ -2,20 +2,21 @@ const { getPool } = require('../db');
 const pool = getPool();
 
 const getCommandesMulti = async (req, res) => {
-    try {
-        const result = await pool.query(`
+  try {
+    // CORRECTION: m.price au lieu de m.prix dans le json_build_object
+    const result = await pool.query(`
       SELECT 
         c.id, 
         c.prenom, 
         c.statut, 
-        c.created_at, -- Assurez-vous d'avoir cette colonne ou utilisez served_at/autre
+        c.created_at, 
         json_agg(
           json_build_object(
             'menu_id', ci.menu_id,
             'quantite', ci.quantite,
             'plat', m.plat,
             'image', m.image,
-            'prix', m.prix
+            'prix', m.price 
           )
         ) AS items
       FROM "adalicious"."commandes" c
@@ -26,17 +27,18 @@ const getCommandesMulti = async (req, res) => {
       ORDER BY c.id ASC
     `);
 
-        res.json(result.rows);
-    } catch (error) {
-        console.error("[getCommandesMulti] ERREUR:", error.message);
-        res.status(500).json({ message: "Erreur serveur" });
-    }
+    res.json(result.rows);
+  } catch (error) {
+    console.error("[getCommandesMulti] ERREUR:", error.message);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
 };
 
 const getCommandeByIdMulti = async (req, res) => {
-    const { id } = req.params;
-    try {
-        const result = await pool.query(`
+  const { id } = req.params;
+  try {
+    // CORRECTION: m.price au lieu de m.prix dans le json_build_object
+    const result = await pool.query(`
       SELECT 
         c.id, 
         c.prenom, 
@@ -46,7 +48,7 @@ const getCommandeByIdMulti = async (req, res) => {
             'menu_id', ci.menu_id,
             'quantite', ci.quantite,
             'plat', m.plat,
-            'prix', m.prix
+            'prix', m.price
           )
         ) AS items
       FROM "adalicious"."commandes" c
@@ -56,15 +58,15 @@ const getCommandeByIdMulti = async (req, res) => {
       GROUP BY c.id
     `, [id]);
 
-        if (result.rows.length === 0) {
-            return res.status(404).json({ message: "Commande non trouvée" });
-        }
-
-        res.json(result.rows[0]);
-    } catch (error) {
-        console.error("[getCommandeByIdMulti] ERREUR:", error.message);
-        res.status(500).json({ message: "Erreur serveur" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Commande non trouvée" });
     }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error("[getCommandeByIdMulti] ERREUR:", error.message);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
 };
 
 module.exports = { getCommandesMulti, getCommandeByIdMulti };
