@@ -23,46 +23,48 @@ const insertCommandeMulti = async (req, res) => {
         await client.query('BEGIN');
 
         // 3. Insérer la commande (entête)
+        // SCHEMA: adalicious.commandes (id, prenom, statut, archivee, annulee, served_at)
+        // Pas de menu_id ici.
         const commandeRes = await client.query(
             `INSERT INTO "adalicious"."commandes" (prenom, statut, archivee, annulee, served_at)
-       VALUES ($1, $2, $3, $4, NULL)
-       RETURNING *`,
+             VALUES ($1, $2, $3, $4, NULL)
+             RETURNING id`,
             [prenom, 'en préparation', false, false]
         );
 
-        const commande = commandeRes.rows[0];
-        const commandeId = commande.id;
-
+        const commandeId = commandeRes.rows[0].id;
         console.log(`[insertCommandeMulti] Commande créée ID=${commandeId}`);
 
         // 4. Insérer les items
-        const insertedItems = [];
+        // SCHEMA: adalicious.commande_items (commande_id, menu_id, quantite, prix)
+        // PRIX: Récupéré depuis adalicious.Menu.price
         for (const item of items) {
-            // CORRECTION: Utilisation de la colonne 'price' de la table Menu pour insérer dans 'prix' de commande_items
             const itemRes = await client.query(
                 `INSERT INTO "adalicious"."commande_items" (commande_id, menu_id, quantite, prix)
-         VALUES ($1, $2, $3, (SELECT price FROM "adalicious"."Menu" WHERE id = $2))
-         RETURNING *`,
+                 VALUES ($1, $2, $3, (SELECT price FROM "adalicious"."Menu" WHERE id = $2))
+                 RETURNING id`,
                 [commandeId, item.menu_id, item.quantite]
             );
-            insertedItems.push(itemRes.rows[0]);
+
+            // Validation: si le menu n'existe pas, SELECT price renvoie NULL. 
+            // Si la colonne prix est NOT NULL, ça plantera (ce qui est bien).
+            // Si elle accepte NULL, on continue.
         }
 
         // 5. Commit
         await client.query('COMMIT');
         console.log(`[insertCommandeMulti] Transaction validée pour ID=${commandeId}`);
 
+        // Retour demandé : { "commandeId": number }
         res.status(201).json({
             message: 'Commande enregistrée avec succès',
-            commandeId: commande.id, // Retour explicite de l'ID demandé
-            commande: commande,
-            items: insertedItems
+            commandeId: commandeId
         });
 
     } catch (error) {
         // 6. Rollback en cas d'erreur
         await client.query('ROLLBACK');
-        console.error('[insertCommandeMulti] ERREUR Transaction:', error);
+        console.error('[insertCommandeMulti] ERREUR Transaction:', error.message);
         res.status(500).json({ message: 'Erreur serveur', error: error.message });
     } finally {
         client.release();
