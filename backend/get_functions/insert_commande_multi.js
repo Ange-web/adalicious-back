@@ -29,7 +29,7 @@ const insertCommandeMulti = async (req, res) => {
             `INSERT INTO "adalicious"."commandes" (prenom, statut, archivee, annulee, served_at)
              VALUES ($1, $2, $3, $4, NULL)
              RETURNING id`,
-            [prenom, 'en préparation', false, false]
+            [prenom, 'en attente', false, false]
         );
 
         const commandeId = commandeRes.rows[0].id;
