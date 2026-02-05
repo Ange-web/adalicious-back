@@ -4,7 +4,10 @@ const pool = getPool();
 const getPlats = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT id, plat, description, image FROM "adalicious"."Menu"`
+      `SELECT id, plat, description, image, price, category 
+       FROM "adalicious"."Menu"
+       WHERE is_active = true
+       ORDER BY category, sort_order`
     );
 
     return res.json(result.rows);
