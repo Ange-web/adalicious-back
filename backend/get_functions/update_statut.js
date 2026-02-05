@@ -21,13 +21,14 @@ const updateStatutCommande = async (req, res) => {
       }
 
       const commande = commandeResult.rows[0];
+      const isAnnulee = statut === 'annulée';
 
       // 2. Insérer dans commandes_archive
       await pool.query(
         `INSERT INTO "adalicious"."commandes_archive" 
-         (id, prenom, menu_id, statut, served_at)
-         VALUES ($1, $2, $3, $4, NOW())`,
-        [commande.id, commande.prenom, commande.menu_id, statut]
+         (id, prenom, menu_id, statut, archivee, annulée)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [commande.id, commande.prenom, commande.menu_id, statut, 'true', isAnnulee ? 'true' : 'false']
       );
 
       // 3. Supprimer de commandes
