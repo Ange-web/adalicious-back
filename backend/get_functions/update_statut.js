@@ -6,17 +6,49 @@ const updateStatutCommande = async (req, res) => {
   const { statut } = req.body;
 
   try {
-    // Auto-archive si statut = 'servie' ou 'annulée'
+    // Si statut = 'servie' ou 'annulée', déplacer vers commandes_archive
     const shouldArchive = statut === 'servie' || statut === 'annulée';
 
+    if (shouldArchive) {
+      // 1. Récupérer la commande actuelle
+      const commandeResult = await pool.query(
+        `SELECT * FROM "adalicious"."commandes" WHERE id = $1`,
+        [id]
+      );
+
+      if (commandeResult.rows.length === 0) {
+        return res.status(404).json({ message: 'Commande non trouvée' });
+      }
+
+      const commande = commandeResult.rows[0];
+
+      // 2. Insérer dans commandes_archive
+      await pool.query(
+        `INSERT INTO "adalicious"."commandes_archive" 
+         (id, prenom, menu_id, statut, served_at)
+         VALUES ($1, $2, $3, $4, NOW())`,
+        [commande.id, commande.prenom, commande.menu_id, statut]
+      );
+
+      // 3. Supprimer de commandes
+      await pool.query(
+        `DELETE FROM "adalicious"."commandes" WHERE id = $1`,
+        [id]
+      );
+
+      return res.json({
+        message: `Commande ${id} archivée avec succès`,
+        commande: { ...commande, statut, archived: true }
+      });
+    }
+
+    // Sinon, update normal du statut
     const result = await pool.query(
       `UPDATE "adalicious"."commandes"
-       SET statut = $1,
-           archivee = CASE WHEN $3 THEN true ELSE archivee END,
-           served_at = CASE WHEN $3 THEN NOW() ELSE served_at END
+       SET statut = $1
        WHERE id = $2
        RETURNING *`,
-      [statut, id, shouldArchive]
+      [statut, id]
     );
 
     if (result.rows.length === 0) {
