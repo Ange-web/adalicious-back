@@ -4,7 +4,7 @@ const pool = getPool();
 const getCommandesArchivees = async (req, res) => {
     try {
         const result = await pool.query(`
-      SELECT a.id, a.prenom, a.statut, a.archivee, a.annulée, a.served_at, m.plat, m.image
+      SELECT a.prenom, a.statut, a.archivee, a.annulee, a.served_at, m.id, m.plat, m.image
       FROM "adalicious"."commandes_archive" a
       JOIN "adalicious"."Menu" m ON m.id::text = a.menu_id
       ORDER BY a.served_at DESC NULLS LAST

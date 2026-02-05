@@ -8,44 +8,38 @@ const updateStatutCommande = async (req, res) => {
   console.log(`[updateStatut] id=${id}, statut=${statut}`);
 
   try {
-    // Si statut = 'servie' ou 'annulée', déplacer vers commandes_archive
     const shouldArchive = statut === 'servie' || statut === 'annulée';
+    const isAnnulee = statut === 'annulée';
 
     if (shouldArchive) {
-      // 1. Récupérer la commande actuelle
-      const commandeResult = await pool.query(
+      // Récupérer la commande AVANT l'update (car le trigger va la supprimer)
+      const selectResult = await pool.query(
         `SELECT * FROM "adalicious"."commandes" WHERE id = $1`,
         [id]
       );
 
-      if (commandeResult.rows.length === 0) {
-        console.log(`[updateStatut] Commande ${id} non trouvée`);
+      if (selectResult.rows.length === 0) {
         return res.status(404).json({ message: 'Commande non trouvée' });
       }
 
-      const commande = commandeResult.rows[0];
-      const isAnnulee = statut === 'annulée';
-      console.log(`[updateStatut] Archivage commande:`, commande);
+      const commande = selectResult.rows[0];
 
-      // 2. Insérer dans commandes_archive avec served_at
+      // UPDATE avec archivee=true → le trigger se déclenche et fait INSERT+DELETE
       await pool.query(
-        `INSERT INTO "adalicious"."commandes_archive" 
-         (id, prenom, menu_id, statut, archivee, annulée, served_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
-        [commande.id, commande.prenom, commande.menu_id, statut, 'true', isAnnulee ? 'true' : 'false']
+        `UPDATE "adalicious"."commandes"
+         SET statut = $1,
+             archivee = true,
+             annulee = $2,
+             served_at = NOW()
+         WHERE id = $3`,
+        [statut, isAnnulee, id]
       );
-      console.log(`[updateStatut] INSERT commandes_archive OK`);
 
-      // 3. Supprimer de commandes
-      await pool.query(
-        `DELETE FROM "adalicious"."commandes" WHERE id = $1`,
-        [id]
-      );
-      console.log(`[updateStatut] DELETE commandes OK`);
+      console.log(`[updateStatut] Commande ${id} archivée via trigger`);
 
       return res.json({
         message: `Commande ${id} archivée avec succès`,
-        commande: { ...commande, statut, archived: true }
+        commande: { ...commande, statut, archivee: true }
       });
     }
 
@@ -69,7 +63,6 @@ const updateStatutCommande = async (req, res) => {
     });
   } catch (error) {
     console.error('[updateStatut] ERREUR:', error.message);
-    console.error('[updateStatut] Stack:', error.stack);
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
 };
