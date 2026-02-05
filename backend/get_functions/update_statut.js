@@ -6,12 +6,17 @@ const updateStatutCommande = async (req, res) => {
   const { statut } = req.body;
 
   try {
+    // Auto-archive si statut = 'servie' ou 'annulée'
+    const shouldArchive = statut === 'servie' || statut === 'annulée';
+
     const result = await pool.query(
       `UPDATE "adalicious"."commandes"
-       SET statut = $1
+       SET statut = $1,
+           archivee = CASE WHEN $3 THEN true ELSE archivee END,
+           served_at = CASE WHEN $3 THEN NOW() ELSE served_at END
        WHERE id = $2
        RETURNING *`,
-      [statut, id]
+      [statut, id, shouldArchive]
     );
 
     if (result.rows.length === 0) {

@@ -8,6 +8,7 @@ const { updateMenu } = require('./get_functions/update_menu');
 const { disableMenu } = require('./get_functions/disable_menu');
 const { insertCommande } = require('./get_functions/insert_com');
 const { archiverCommande } = require('./get_functions/update_archive');
+const { getCommandesArchivees } = require('./get_functions/get_archives');
 const { getCommandeById } = require('./get_functions/get_commandeById');
 const { getToutesCommandes } = require('./get_functions/get_commandes');
 const { updateStatutCommande } = require('./get_functions/update_statut');
@@ -32,6 +33,7 @@ app.get('/commande', getToutesCommandes);
 app.post('/commandes', insertCommande);
 app.put('/commandes/:id/statut', updateStatutCommande);
 app.post('/commandes/archiver', archiverCommande);
+app.get('/commandes/archives', getCommandesArchivees);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
