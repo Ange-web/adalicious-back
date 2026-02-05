@@ -27,7 +27,7 @@ app.put('/menu/:id', updateMenu);
 app.patch('/menu/:id/disable', disableMenu);
 
 // Routes Commandes - ORDRE IMPORTANT
-app.get('/commande', getCommandesMulti);           // Cuisine (actives)
+app.get('/commandes', getCommandesMulti);           // Cuisine (actives)
 app.get('/commandes/archives', getCommandesArchivees); // Cuisine (archives)
 app.post('/commandes/archiver', archiverCommande);
 app.post('/commandes', insertCommandeMulti);       // Borne (création)
