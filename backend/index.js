@@ -26,12 +26,16 @@ app.post('/menu', insertMenu);
 app.put('/menu/:id', updateMenu);
 app.patch('/menu/:id/disable', disableMenu);
 
-// Routes Commandes - ORDRE IMPORTANT: routes statiques AVANT routes avec :id
-app.get('/commande', getCommandesMulti);
-app.get('/commandes/archives', getCommandesArchivees);
+// Routes Commandes - ORDRE IMPORTANT
+app.get('/commande', getCommandesMulti);           // Cuisine (actives)
+app.get('/commandes/archives', getCommandesArchivees); // Cuisine (archives)
 app.post('/commandes/archiver', archiverCommande);
-app.post('/commandes', insertCommandeMulti);
+app.post('/commandes', insertCommandeMulti);       // Borne (création)
+
+// Route Suivi / Détail (Actives + Archives)
 app.get('/commandes/:id', getCommandeByIdMulti);
+app.get('/suivi/:id', getCommandeByIdMulti); // Alias pour clarté
+
 app.put('/commandes/:id/statut', updateStatutCommande);
 
 // Health check
