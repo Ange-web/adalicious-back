@@ -6,11 +6,10 @@ const { getMenuByCategory } = require('./get_functions/get_menu_by_category');
 const { insertMenu } = require('./get_functions/insert_menu');
 const { updateMenu } = require('./get_functions/update_menu');
 const { disableMenu } = require('./get_functions/disable_menu');
-const { insertCommande } = require('./get_functions/insert_com');
+const { insertCommandeMulti } = require('./get_functions/insert_commande_multi');
 const { archiverCommande } = require('./get_functions/update_archive');
 const { getCommandesArchivees } = require('./get_functions/get_archives');
-const { getCommandeById } = require('./get_functions/get_commandeById');
-const { getToutesCommandes } = require('./get_functions/get_commandes');
+const { getCommandesMulti, getCommandeByIdMulti } = require('./get_functions/get_commandes_multi');
 const { updateStatutCommande } = require('./get_functions/update_statut');
 
 
@@ -28,11 +27,11 @@ app.put('/menu/:id', updateMenu);
 app.patch('/menu/:id/disable', disableMenu);
 
 // Routes Commandes - ORDRE IMPORTANT: routes statiques AVANT routes avec :id
-app.get('/commande', getToutesCommandes);
+app.get('/commande', getCommandesMulti);
 app.get('/commandes/archives', getCommandesArchivees);
 app.post('/commandes/archiver', archiverCommande);
-app.post('/commandes', insertCommande);
-app.get('/commandes/:id', getCommandeById);
+app.post('/commandes', insertCommandeMulti);
+app.get('/commandes/:id', getCommandeByIdMulti);
 app.put('/commandes/:id/statut', updateStatutCommande);
 
 // Health check
