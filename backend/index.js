@@ -27,13 +27,13 @@ app.post('/menu', insertMenu);
 app.put('/menu/:id', updateMenu);
 app.patch('/menu/:id/disable', disableMenu);
 
-// Routes Commandes
-app.get('/commandes/:id', getCommandeById);
+// Routes Commandes - ORDRE IMPORTANT: routes statiques AVANT routes avec :id
 app.get('/commande', getToutesCommandes);
-app.post('/commandes', insertCommande);
-app.put('/commandes/:id/statut', updateStatutCommande);
-app.post('/commandes/archiver', archiverCommande);
 app.get('/commandes/archives', getCommandesArchivees);
+app.post('/commandes/archiver', archiverCommande);
+app.post('/commandes', insertCommande);
+app.get('/commandes/:id', getCommandeById);
+app.put('/commandes/:id/statut', updateStatutCommande);
 
 // Health check
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
