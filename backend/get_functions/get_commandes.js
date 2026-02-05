@@ -7,7 +7,7 @@ const getToutesCommandes = async (req, res) => {
       SELECT c.id, c.prenom, c.statut, m.plat, m.image
       FROM "adalicious"."commandes" c
       JOIN "adalicious"."Menu" m ON m.id = c.menu_id
-      WHERE c.archivee = false AND c.annulée = false
+      WHERE c.archivee = false AND c.annulee = false
       ORDER BY c.id ASC
     `);
 
